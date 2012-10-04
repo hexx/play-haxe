@@ -25,7 +25,7 @@ object HaxeCompiler {
       val process = Process(Seq("haxe", "-cp", dir.getAbsolutePath, "-js", dest.getAbsolutePath) ++ options ++ Seq("-main", src.getName))
       var out = new StringBuilder
       var err = new StringBuilder
-      val logger = ProcessLogger((s) => out.append(s + "\n"), (s) => err.append(s + "\n"))
+      val logger = ProcessLogger(s => out.append(s + "\n"), s => err.append(s + "\n"))
       val exit = process ! logger
       if (exit != 0) {
         val regex = """(?s).*\.hx:(\d+): characters (\d+)-.*""".r

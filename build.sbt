@@ -6,15 +6,13 @@ organization := "com.github.hexx"
 
 version := "0.0.1"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.3"
 
 scalacOptions := Seq("-deprecation", "-unchecked")
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 
-libraryDependencies <++= (scalaVersion, sbtVersion) { (scalaV, sbtV) => Seq(
-  "play" % "sbt-plugin" % "2.0.4" extra("scalaVersion" -> scalaV, "sbtVersion" -> sbtV)
-)}
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.2.0")
 
 publishMavenStyle := true
 

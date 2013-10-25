@@ -7,7 +7,7 @@ object PlayHaxePlugin extends Plugin {
   val haxeEntryPoints = SettingKey[PathFinder]("play-haxe-entry-points")
   val haxeOptions = SettingKey[Seq[String]]("play-haxe-options")
 
-  val HaxeCompiler = PlayProject.AssetsCompiler("haxe", 
+  val HaxeCompiler = play.Project.AssetsCompiler("haxe",
     (_ ** "*.hx"),
     haxeEntryPoints,
     { (name, min) => name.replace(".hx", if (min) ".min.js" else ".js") },

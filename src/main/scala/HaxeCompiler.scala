@@ -4,9 +4,8 @@ import java.io.File
 import scala.io.Source
 import scala.sys.process._
 import scala.util.control.Exception._
-import sbt.PlayExceptions.AssetCompilationException
-import play.api._
 import play.core.jscompile.JavascriptCompiler
+import play.PlayExceptions.AssetCompilationException
 
 object HaxeCompiler {
   def compile(file: File, options: Seq[String]) = {
@@ -23,14 +22,14 @@ object HaxeCompiler {
     val dest = File.createTempFile(src.getName, ".js")
     try {
       val process = Process(Seq("haxe", "-cp", dir.getAbsolutePath, "-js", dest.getAbsolutePath) ++ options ++ Seq("-main", src.getName))
-      var out = new StringBuilder
-      var err = new StringBuilder
+      val out = new StringBuilder
+      val err = new StringBuilder
       val logger = ProcessLogger(s => out.append(s + "\n"), s => err.append(s + "\n"))
       val exit = process ! logger
       if (exit != 0) {
         val regex = """(?s).*\.hx:(\d+): characters (\d+)-.*""".r
         val regex(line, column) = err.mkString
-        throw AssetCompilationException(Some(src), err.mkString, line.toInt, column.toInt)
+        throw AssetCompilationException(Some(src), err.mkString, Option(line.toInt), Option(column.toInt))
       }
       Source.fromFile(dest).mkString
     } finally {

@@ -32,18 +32,21 @@ object HaxeCompiler {
 
         // .hx files without main function is used to be imported from other files.
         // Returns empty string in this case.
-        if (errString.indexOf(" does not have static function main") >= 0) ""
+        if (errString.contains(" does not have static function main")) ""
         else {
-          val regex1 = """(?s).*\.hx:(\d+): characters (\d+)-.*""".r
-          val regex2 = """(?s).*\.hx:(\d+): """.r
+          // Following regex assumes that a path name
+          // 1. starts with a non-space character
+          // 2. doesn't contain : (colon)
+          val regex = """(\S[^:]*\.hx):(\d+): (?:characters (\d+))?""".r
+          val (file, line, column) = regex.findFirstMatchIn(errString).map { (m) =>
+            (
+              Option(m.group(1)).map(new File(_)),
+              Option(m.group(2)).map(_.toInt),
+              Option(m.group(3)).map(_.toInt)
+            )
+          }.getOrElse((Some(src), None, None))
 
-          val (line, column) = errString match {
-            case regex1(l, c) => (Some(l.toInt), Some(c.toInt))
-            case regex2(l) => (Some(l.toInt), None)
-            case _ => (None, None)
-          }
-
-          throw AssetCompilationException(Some(src), errString, line, column)
+          throw AssetCompilationException(file, errString, line, column)
         }
       }
     } finally {

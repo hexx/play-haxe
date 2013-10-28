@@ -17,7 +17,7 @@ object HaxeCompiler {
     catching(classOf[AssetCompilationException]).opt(JavascriptCompiler.minify(js, Some(file.getName)))
   }
 
-  def executeNativeCompiler(src: File, options: Seq[String]) = {
+  def executeNativeCompiler(src: File, options: Seq[String]): String = {
     val dir = new File(src.getParentFile.getAbsolutePath)
     val dest = File.createTempFile(src.getName, ".js")
     try {
@@ -26,12 +26,29 @@ object HaxeCompiler {
       val err = new StringBuilder
       val logger = ProcessLogger(s => out.append(s + "\n"), s => err.append(s + "\n"))
       val exit = process ! logger
-      if (exit != 0) {
-        val regex = """(?s).*\.hx:(\d+): characters (\d+)-.*""".r
-        val regex(line, column) = err.mkString
-        throw AssetCompilationException(Some(src), err.mkString, Option(line.toInt), Option(column.toInt))
+      if (exit == 0) Source.fromFile(dest).mkString
+      else {
+        val errString = err.mkString
+
+        // .hx files without main function is used to be imported from other files.
+        // Returns empty string in this case.
+        if (errString.contains(" does not have static function main")) ""
+        else {
+          // Following regex assumes that a path name
+          // 1. starts with a non-space character
+          // 2. doesn't contain : (colon)
+          val regex = """(\S[^:]*\.hx):(\d+): (?:characters (\d+))?""".r
+          val (file, line, column) = regex.findFirstMatchIn(errString).map { (m) =>
+            (
+              Option(m.group(1)).map(new File(_)),
+              Option(m.group(2)).map(_.toInt),
+              Option(m.group(3)).map(_.toInt)
+            )
+          }.getOrElse((Some(src), None, None))
+
+          throw AssetCompilationException(file, errString, line, column)
+        }
       }
-      Source.fromFile(dest).mkString
     } finally {
       dest.delete()
     }

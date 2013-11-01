@@ -16,7 +16,7 @@ object PlayHaxePlugin extends Plugin {
   )
 
   override val settings = Seq(
-    haxeEntryPoints <<= (sourceDirectory in Compile)(base => base / "assets" ** "*.hx"),
+    haxeEntryPoints <<= (sourceDirectory in Compile)(_ / "assets" ** "*.hx"),
     haxeOptions := Seq.empty[String],
     resourceGenerators in Compile <+= HaxeCompiler
   )
